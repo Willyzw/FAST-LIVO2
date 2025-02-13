@@ -36,6 +36,7 @@ public:
   void handleVIO();
   void handleLIO();
   void savePCD();
+  void savePath();
   void processImu();
   
   bool sync_packages(LidarMeasureGroup &meas);

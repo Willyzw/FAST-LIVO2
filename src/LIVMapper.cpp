@@ -474,6 +474,19 @@ void LIVMapper::handleLIO()
             << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose() << " " << feats_undistort->points.size() << std::endl;
 }
 
+void LIVMapper::savePath()
+{
+    std::ofstream os;
+    os.open(std::string(ROOT_DIR) + "Log/fast_livo2_path.txt", std::ios::out | std::ios::trunc);
+    for (const geometry_msgs::PoseStamped& pose : path.poses) {
+        double tstamp = pose.header.stamp.sec + pose.header.stamp.nsec / 1e9;
+        os << std::to_string(tstamp) << " ";
+        os << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " ";
+        os << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " " << pose.pose.orientation.w << std::endl;
+    }
+    os.close();
+}
+
 void LIVMapper::savePCD() 
 {
   if (pcd_save_en && pcl_wait_save->points.size() > 0 && pcd_save_interval < 0) 
@@ -537,6 +550,7 @@ void LIVMapper::run()
 
     stateEstimationAndMapping();
   }
+  savePath();
   savePCD();
 }
 
@@ -1248,7 +1262,7 @@ void LIVMapper::publish_mavros(const ros::Publisher &mavros_pose_publisher)
 void LIVMapper::publish_path(const ros::Publisher pubPath)
 {
   set_posestamp(msg_body_pose.pose);
-  msg_body_pose.header.stamp = ros::Time::now();
+  msg_body_pose.header.stamp = ros::Time().fromSec(last_timestamp_lidar);
   msg_body_pose.header.frame_id = "camera_init";
   path.poses.push_back(msg_body_pose);
   pubPath.publish(path);
